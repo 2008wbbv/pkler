@@ -1,2 +1,2 @@
-# scatter-image-gen
-generates a pkl from any image
+#USAGE
+ ## python imagegen.py otherimage.png --out=whatever.pkl
