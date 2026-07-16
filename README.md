@@ -1,2 +1,2 @@
-#USAGE
- ## python imagegen.py otherimage.png --out=whatever.pkl
+## USAGE
+# python imagegen.py otherimage.png --out=whatever.pkl
