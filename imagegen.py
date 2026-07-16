@@ -11,7 +11,10 @@ from PIL import Image
 C = 299792458.0   #speed of light (m/s)
 FC = 4.3e9        #P452 UWB center frequency (Hz)
 
-IMG_PX = 256      #scene raster side (pixels)
+IMG_PX = 512      #scene raster side (pixels) - 0.078 m spacing, under the ~0.15 m focused
+                  #resolution, so the picture renders as a continuous surface; a 256 grid
+                  #spaced scatterers 0.16 m apart and backpro resolved each one, turning
+                  #every tonal block into a comb of vertical stripes
 SCENE = 40.0      #scene side (m)
 STANDOFF = 45.0   #scene center distance from the track (m) - the whole scene sits on one
                   #side so the left/right mirror can't fold the picture onto itself, and
@@ -25,7 +28,9 @@ JITTER = 0.25     #random lateral wobble sigma (m) - a smooth bend only smears t
                   #ghost into an arc; random wobble decoheres it outright, so the true side
                   #wins the tie-break by a wide margin instead of a speckle coin flip
 NBINS = 3093      #range bins
-RMAX = 1000.0     #last range bin (m)
+RMAX = 220.0      #last range bin (m) - bins ~0.07 m apart so range resolution matches
+                  #azimuth; at 1000 m the 0.32 m bins smeared rows together while columns
+                  #stayed sharp, an anisotropic blur that read as vertical streaking
 THRESH = 0.02     #reflectivity floor - dimmer pixels are dropped
 MARGIN = 0.2      #fraction of the scene left empty around the figure: backpro centers its
                   #frame on the brightest coarse blob, which wanders across the figure, so
@@ -33,7 +38,10 @@ MARGIN = 0.2      #fraction of the scene left empty around the figure: backpro c
 GAMMA = 0.38      #brightness -> reflectivity exponent: flat enough that every part of the
                   #figure clears backpro's 30% range-profile cut (so the frame holds the
                   #whole body), steep enough to keep the shirt/pants tonal blocks apart
-NOISE = 1e-3      #receiver noise sigma, relative to signal rms
+NOISE = 1e-2      #receiver noise sigma, relative to signal rms - high enough that the
+                  #background reads as uniform fine grain under the display's median floor,
+                  #low enough not to fuzz the figure; the faint arc at the figure's ranges
+                  #is the azimuth decorrelation pedestal and no noise level hides it
 CHUNK = 64        #pulses simulated per vectorized block
 
 FLAGS = [a for a in sys.argv[1:] if a.startswith("-")]
@@ -59,8 +67,11 @@ def image_to_scatterers(path):
     refl = np.minimum(refl, 1.0)
     row, col = np.nonzero(refl > THRESH)
     step = SCENE / (IMG_PX - 1)
-    x = col * step - SCENE / 2               #left edge of the picture -> x = -20
-    y = STANDOFF + SCENE / 2 - row * step    #top row -> far edge, so it reconstructs upright
+    dith = np.random.default_rng(2)          #scatterers on an exact lattice beat against the
+                                             #image grid as moire ripples; a sub-pixel shuffle
+                                             #melts those into fine isotropic speckle
+    x = col * step - SCENE / 2 + (dith.random(col.size) - 0.5) * step   #left edge -> x = -20
+    y = STANDOFF + SCENE / 2 - row * step + (dith.random(row.size) - 0.5) * step   #top row -> far edge, upright
     return np.column_stack([x, y]), refl[row, col]
 
 
