@@ -11,7 +11,7 @@ from PIL import Image
 C = 299792458.0   #speed of light (m/s)
 FC = 4.3e9        #P452 UWB center frequency (Hz)
 
-IMG_PX = 512      #scene raster side (pixels) - 0.078 m spacing, under the ~0.15 m focused
+IMG_PX = 2048      #scene raster side (pixels) - 0.078 m spacing, under the ~0.15 m focused
                   #resolution, so the picture renders as a continuous surface; a 256 grid
                   #spaced scatterers 0.16 m apart and backpro resolved each one, turning
                   #every tonal block into a comb of vertical stripes
